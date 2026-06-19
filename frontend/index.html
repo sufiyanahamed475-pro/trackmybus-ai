@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TrackMyBus AI — AMET University</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ════════════════════ LOGIN SCREEN ════════════════════ -->
+    <div id="screen-login" class="screen active">
+        <div class="login-bg-grid"></div>
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="login-logo-icon">🚌</div>
+                <h1>TrackMyBus <span>AI</span></h1>
+                <p>AMET University Transport</p>
+            </div>
+            <div class="login-role-cards">
+                <div class="role-card active" data-role="student" onclick="selectRole('student',this)">
+                    <div class="role-card-icon">👨‍🎓</div>
+                    <div class="role-card-label">Student</div>
+                </div>
+                <div class="role-card" data-role="driver" onclick="selectRole('driver',this)">
+                    <div class="role-card-icon">🚗</div>
+                    <div class="role-card-label">Driver</div>
+                </div>
+                <div class="role-card" data-role="admin" onclick="selectRole('admin',this)">
+                    <div class="role-card-icon">⚙️</div>
+                    <div class="role-card-label">Admin</div>
+                </div>
+            </div>
+            <div class="login-field">
+                <label>Email / ID</label>
+                <input type="text" id="login-email" placeholder="sufiyan@amet.ac.in" value="sufiyan@amet.ac.in">
+            </div>
+            <div class="login-field">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="••••••••" value="student123">
+            </div>
+            <button class="login-btn" onclick="doLogin()">Sign In →</button>
+            <div class="login-demo">
+                <p>Demo credentials:<br>
+                    <span>Student:</span> sufiyan@amet.ac.in / student123<br>
+                    <span>Driver:</span> rajan@amet.ac.in / driver123<br>
+                    <span>Admin:</span> admin@amet.ac.in / admin123
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════ MAIN APP ════════════════════ -->
+    <div id="screen-app" class="screen">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-header-left">
+                <span class="app-header-logo">Track<span>My</span>Bus AI</span>
+                <span class="portal-badge" id="portal-badge">Student</span>
+            </div>
+            <div class="app-header-right">
+                <div class="header-live-dot"></div>
+                <div class="header-btn" onclick="showToast('🔔 No new notifications','cyan')" title="Notifications">🔔
+                </div>
+                <div class="header-btn" onclick="doLogout()" title="Sign Out">👤</div>
+            </div>
+        </header>
+
+        <!-- Tab content -->
+        <div class="tab-content">
+            <!-- ─── STUDENT: HOME ─── -->
+            <div class="tab-pane active" id="pane-home">
+                <div class="page-pad">
+                    <!-- Greeting -->
+                    <div style="margin-bottom:14px;">
+                        <p style="font-size:12px;color:var(--text3);font-family:var(--mono);">📍 Live service active</p>
+                        <h2 style="font-size:20px;font-weight:700;margin-top:2px;">Good morning, <span
+                                style="color:var(--cyan);" id="greeting-name">Sufiyan</span> 👋</h2>
+                        <p style="font-size:13px;color:var(--text2);margin-top:3px;">Bus 23 · Route ECR · Pickup 7:45 AM
+                        </p>
+                    </div>
+
+                    <!-- Bus hero -->
+                    <div class="bus-hero">
+                        <div class="bus-hero-top">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div class="bus-number-badge" id="hero-bus-num">23</div>
+                                <div class="bus-route-info">
+                                    <h3>Route ECR</h3>
+                                    <p>AMET University → Thiruvanmiyur</p>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="status-pill on-time" id="hero-status">● On Time</div>
+                            </div>
+                        </div>
+                        <div class="bus-meta">
+                            <div class="bus-meta-item">
+                                <div class="val" id="meta-eta">8<span style="font-size:11px;color:var(--text2)">
+                                        min</span></div>
+                                <div class="lbl">ETA</div>
+                            </div>
+                            <div class="bus-meta-item">
+                                <div class="val" id="meta-dist">3.2<span style="font-size:11px;color:var(--text2)">
+                                        km</span></div>
+                                <div class="lbl">Away</div>
+                            </div>
+                            <div class="bus-meta-item">
+                                <div class="val" id="meta-stops">2</div>
+                                <div class="lbl">Stops</div>
+                            </div>
+                            <div class="bus-meta-item">
+                                <div class="val" id="meta-speed">42<span style="font-size:11px;color:var(--text2)">
+                                        km/h</span></div>
+                                <div class="lbl">Speed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-val cyan" id="stat-eta-min">8</div>
+                            <div class="stat-label">⏱️ Bus ETA (min)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val green">34</div>
+                            <div class="stat-label">👥 Passengers</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Prediction -->
+                    <div class="ai-card">
+                        <div class="ai-card-header">
+                            <span style="font-size:13px;font-weight:600;">AI Delay Prediction</span>
+                            <span class="ai-chip">✨ AI</span>
+                        </div>
+                        <div class="ai-pred-row">
+                            <span class="ai-pred-label">Delay Risk</span>
+                            <span class="ai-pred-val risk-low" id="ai-risk">Low (12%)</span>
+                        </div>
+                        <div class="ai-pred-row">
+                            <span class="ai-pred-label">Predicted Arrival</span>
+                            <span class="ai-pred-val" id="ai-arrival">7:53 AM</span>
+                        </div>
+                        <div class="ai-pred-row">
+                            <span class="ai-pred-label">Traffic Impact</span>
+                            <span class="ai-pred-val risk-low" id="ai-traffic">Minimal near Adyar</span>
+                        </div>
+                    </div>
+
+                    <!-- Next stop -->
+                    <div class="card card-glow">
+                        <div class="section-title">🗺️ Next Stop</div>
+                        <p style="font-size:14px;font-weight:600;">ECR – Thiruvanmiyur</p>
+                        <p style="font-size:12px;color:var(--text2);margin-top:3px;">Arriving in ~8 min · 3.2 km away
+                        </p>
+                        <button class="submit-btn" style="margin-top:12px;padding:10px;" onclick="switchTab('track')">📡
+                            Track Live on Map →</button>
+                    </div>
+
+                    <!-- Latest alert -->
+                    <div class="card">
+                        <div class="section-title">📢 Latest Alert</div>
+                        <div class="alert-item">
+                            <div class="alert-icon info">🚌</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Bus 23 Approaching</div>
+                                <div class="alert-text">Your bus is 3.2 km away. Arriving at ECR Stop in ~8 minutes.
+                                </div>
+                                <div class="alert-time">Just now · 7:37 AM</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Driver info -->
+                    <div class="card">
+                        <div class="section-title">👨‍✈️ Driver Details</div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div
+                                style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00b8d4,#004d6e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">
+                                R</div>
+                            <div>
+                                <p style="font-size:14px;font-weight:600;">Mr. Rajan Kumar</p>
+                                <p style="font-size:12px;color:var(--text2);">12 yrs experience · ID: DRV-047</p>
+                                <p style="font-size:11px;color:var(--green);margin-top:2px;">● On duty</p>
+                            </div>
+                            <div style="margin-left:auto;">
+                                <button class="action-btn" onclick="showToast('📞 Calling driver...','cyan')">📞
+                                    Call</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pass info -->
+                    <div class="card">
+                        <div class="section-title">🎫 Bus Pass</div>
+                        <div class="info-row">
+                            <span class="info-key">Pass ID</span><span class="info-val"
+                                style="font-family:var(--mono);color:var(--cyan);">PASS-AMT-2024</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-key">Valid Until</span><span class="info-val">May 31, 2025</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-key">Status</span><span class="info-val"><span
+                                    class="status-pill on-time">Active</span></span>
+                        </div>
+                        <div class="info-row" style="border-bottom:none;">
+                            <span class="info-key">Last Payment</span><span class="info-val"
+                                style="color:var(--amber);">₹850 · May 1</span>
+                        </div>
+                    </div>
+
+                    <!-- Trip history -->
+                    <div class="card">
+                        <div class="section-title">📅 Recent Trips</div>
+                        <div class="alert-item">
+                            <div class="alert-icon success">✅</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Boarded Bus 23 at Thiruvanmiyur</div>
+                                <div class="alert-time">Today · 7:47 AM → AMET 8:30 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon info">🚌</div>
+                            <div class="alert-body">
+                                <div class="alert-title">On-time arrival</div>
+                                <div class="alert-time">Yesterday · 7:45 AM → AMET 8:28 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon warn">⚠️</div>
+                            <div class="alert-body">
+                                <div class="alert-title">15 min delay — Adyar traffic</div>
+                                <div class="alert-time">Apr 29 · 8:03 AM → AMET 8:45 AM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── TRACK MAP ─── -->
+            <div class="tab-pane" id="pane-track">
+                <div class="page-pad">
+                    <div class="section-title" style="margin-bottom:8px;">📡 Live Bus Tracking</div>
+                    <div id="track-map" style="height:260px;"></div>
+                    <div class="card" style="margin-top:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:14px;font-weight:600;">Route ECR — Live Status</span>
+                            <span class="status-pill on-time">● Moving</span>
+                        </div>
+                        <div class="section-title">Route Stops</div>
+                        <div class="route-stop">
+                            <div class="stop-dot passed"></div>
+                            <div>
+                                <div class="stop-name">AMET University</div>
+                                <div class="stop-time">Origin · 8:30 AM</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot passed"></div>
+                            <div>
+                                <div class="stop-name">Kanathur</div>
+                                <div class="stop-time">Passed · 7:52 AM</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot current"></div>
+                            <div>
+                                <div class="stop-name">Neelankarai ← NOW</div>
+                                <div class="stop-time">Current · 3.2 km away</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot"></div>
+                            <div>
+                                <div class="stop-name">ECR – Thiruvanmiyur</div>
+                                <div class="stop-time">Next · ~8 min</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot"></div>
+                            <div>
+                                <div class="stop-name">Besant Nagar</div>
+                                <div class="stop-time">Estimated · 7:58 AM</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot"></div>
+                            <div>
+                                <div class="stop-name">Adyar</div>
+                                <div class="stop-time">Estimated · 8:08 AM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── ALERTS ─── -->
+            <div class="tab-pane" id="pane-alerts">
+                <div class="page-pad">
+                    <div class="section-title">🔔 Notifications</div>
+                    <div class="card">
+                        <div
+                            style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">
+                            TODAY</div>
+                        <div class="alert-item">
+                            <div class="alert-icon info">🚌</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Bus 23 Approaching</div>
+                                <div class="alert-text">Your bus is 3.2 km away. Arriving at ECR Stop in ~8 minutes. Be
+                                    at the stop!</div>
+                                <div class="alert-time">Just now · 7:37 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon success">✅</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Student Boarded</div>
+                                <div class="alert-text">Sufiyan successfully boarded Bus 23. Estimated arrival at AMET:
+                                    8:30 AM.</div>
+                                <div class="alert-time">Yesterday · 7:47 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon warn">⚠️</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Delay Notice — 15 Min</div>
+                                <div class="alert-text">Bus 23 delayed due to heavy traffic near Adyar signal. New ETA:
+                                    7:58 AM.</div>
+                                <div class="alert-time">Yesterday · 7:30 AM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div
+                            style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">
+                            EARLIER</div>
+                        <div class="alert-item">
+                            <div class="alert-icon danger">🔧</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Route Change — ECR</div>
+                                <div class="alert-text">Due to road work near Neelankarai, Bus 23 will take alternate
+                                    route via OMR. Total delay: 5 min.</div>
+                                <div class="alert-time">Mon, Apr 28 · 7:15 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon info">📋</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Monthly Pass Renewed</div>
+                                <div class="alert-text">Transport pass for May 2025 auto-renewed. Amount: ₹850 debited.
+                                    Valid until May 31.</div>
+                                <div class="alert-time">Mon, Apr 28 · 9:00 AM</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon success">🎉</div>
+                            <div class="alert-body">
+                                <div class="alert-title">Perfect Attendance!</div>
+                                <div class="alert-text">You've boarded Bus 23 for 20 consecutive days. Keep it up,
+                                    Sufiyan!</div>
+                                <div class="alert-time">Sat, Apr 26 · 8:00 AM</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Complaint -->
+                    <div class="section-title" style="margin-top:4px;">📝 Submit Complaint</div>
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select>
+                                <option>Bus Delay</option>
+                                <option>Driver Behaviour</option>
+                                <option>Route Issue</option>
+                                <option>Overcrowding</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bus Number</label>
+                            <input type="text" value="23" placeholder="e.g. 23">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea placeholder="Describe your issue..."></textarea>
+                        </div>
+                        <button class="submit-btn"
+                            onclick="showToast('✅ Complaint submitted successfully','green')">Submit Complaint
+                            →</button>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── PROFILE ─── -->
+            <div class="tab-pane" id="pane-profile">
+                <div class="profile-hero">
+                    <div class="avatar" id="profile-avatar">S</div>
+                    <div class="profile-name" id="profile-name">Sufiyan</div>
+                    <div class="profile-sub" id="profile-sub">B.Tech Computer Science · Year 2</div>
+                    <div style="margin-top:8px;"><span class="status-pill on-time">● Active Pass</span></div>
+                </div>
+                <div class="page-pad">
+                    <div class="card">
+                        <div class="section-title">🎓 Student Info</div>
+                        <div class="info-row"><span class="info-key">🎓 Student ID</span><span class="info-val"
+                                style="font-family:var(--mono);color:var(--cyan);">AMT2024</span></div>
+                        <div class="info-row"><span class="info-key">🏫 Department</span><span
+                                class="info-val">CSE</span></div>
+                        <div class="info-row"><span class="info-key">📱 Phone</span><span class="info-val">+91 98765
+                                43210</span></div>
+                        <div class="info-row"><span class="info-key">📧 Email</span><span class="info-val"
+                                style="font-size:12px;">sufiyan@amet.ac.in</span></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">🚌 Bus Details</div>
+                        <div class="info-row"><span class="info-key">🚌 Bus Number</span><span class="info-val"
+                                style="color:var(--cyan);font-weight:700;">23</span></div>
+                        <div class="info-row"><span class="info-key">🗺️ Route</span><span class="info-val">ECR
+                                Line</span></div>
+                        <div class="info-row"><span class="info-key">📍 Boarding Stop</span><span
+                                class="info-val">Thiruvanmiyur</span></div>
+                        <div class="info-row"><span class="info-key">⏰ Pickup Time</span><span class="info-val"
+                                style="color:var(--amber);">7:45 AM</span></div>
+                        <div class="info-row"><span class="info-key">👨‍✈️ Driver</span><span class="info-val">Rajan
+                                Kumar</span></div>
+                    </div>
+                    <button class="submit-btn danger" style="margin-top:4px;" onclick="doLogout()">Sign Out</button>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── DRIVER: HOME ─── -->
+            <div class="tab-pane" id="pane-driver-home">
+                <div class="page-pad">
+                    <p style="font-size:12px;color:var(--text3);font-family:var(--mono);">Driver Portal</p>
+                    <h2 style="font-size:20px;font-weight:700;margin-top:2px;margin-bottom:14px;">Welcome, <span
+                            style="color:var(--green);">Rajan Kumar</span> 🚗</h2>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-val green">12</div>
+                            <div class="stat-label">Years Exp</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val cyan">DRV-047</div>
+                            <div class="stat-label" style="font-family:var(--mono);font-size:9px;">Driver ID</div>
+                        </div>
+                    </div>
+                    <div class="card card-glow" style="border-color:rgba(0,230,118,0.25);">
+                        <div class="section-title">🚌 Assigned Bus</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div>
+                                <p style="font-size:20px;font-weight:700;color:var(--green);">Bus 23</p>
+                                <p style="font-size:12px;color:var(--text2);">Route ECR · 6 stops</p>
+                            </div>
+                            <span class="status-pill on-time" id="driver-status">● Ready</span>
+                        </div>
+                        <div class="trip-toggle">
+                            <button class="trip-btn start" id="btn-start-trip" onclick="startTrip()">▶ Start
+                                Trip</button>
+                            <button class="trip-btn end" id="btn-end-trip" onclick="endTrip()">■ End Trip</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">📊 Today's Stats</div>
+                        <div class="stats-row four">
+                            <div class="stat-card">
+                                <div class="stat-val cyan" id="d-passengers">34</div>
+                                <div class="stat-label">Passengers</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-val green" id="d-trips">2</div>
+                                <div class="stat-label">Trips</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-val amber">42</div>
+                                <div class="stat-label">km/h</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-val" style="font-size:14px;">98%</div>
+                                <div class="stat-label">On-time</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">📍 Update Status</div>
+                        <div class="form-group">
+                            <label>Bus Status</label>
+                            <select id="bus-status-sel">
+                                <option>On Time</option>
+                                <option>Delayed</option>
+                                <option>At Stop</option>
+                                <option>Arrived at AMET</option>
+                                <option>Off Duty</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Delay Reason (if any)</label>
+                            <input type="text" placeholder="e.g. Traffic near Adyar signal">
+                        </div>
+                        <div class="form-group">
+                            <label>Passenger Count</label>
+                            <input type="number" value="34" min="0" max="60">
+                        </div>
+                        <button class="submit-btn green" onclick="showToast('✅ Bus status updated','green')">Update
+                            Status →</button>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">📋 Today's Route</div>
+                        <div class="route-stop">
+                            <div class="stop-dot passed"></div>
+                            <div>
+                                <div class="stop-name">AMET Campus Depart</div>
+                                <div class="stop-time">6:30 AM — Completed</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot passed"></div>
+                            <div>
+                                <div class="stop-name">Kanathur</div>
+                                <div class="stop-time">6:48 AM — Completed</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot current"></div>
+                            <div>
+                                <div class="stop-name">Neelankarai</div>
+                                <div class="stop-time">7:00 AM — In Progress</div>
+                            </div>
+                        </div>
+                        <div class="route-stop">
+                            <div class="stop-dot"></div>
+                            <div>
+                                <div class="stop-name">ECR Thiruvanmiyur</div>
+                                <div class="stop-time">7:15 AM — Upcoming</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── DRIVER: GPS ─── -->
+            <div class="tab-pane" id="pane-driver-gps">
+                <div class="page-pad">
+                    <div class="section-title" style="margin-bottom:8px;">📡 GPS Live Feed</div>
+                    <div id="driver-map"
+                        style="height:240px;border-radius:12px;overflow:hidden;border:1px solid var(--border2);"></div>
+                    <div class="card" style="margin-top:12px;">
+                        <div class="section-title">📡 GPS Data</div>
+                        <div class="info-row"><span class="info-key">Latitude</span><span class="info-val"
+                                style="font-family:var(--mono);font-size:12px;color:var(--cyan);"
+                                id="gps-lat">12.8406</span></div>
+                        <div class="info-row"><span class="info-key">Longitude</span><span class="info-val"
+                                style="font-family:var(--mono);font-size:12px;color:var(--cyan);"
+                                id="gps-lng">80.2534</span></div>
+                        <div class="info-row"><span class="info-key">Speed</span><span class="info-val"
+                                style="color:var(--green);" id="gps-speed">42 km/h</span></div>
+                        <div class="info-row"><span class="info-key">Last Sync</span><span class="info-val"
+                                style="font-family:var(--mono);font-size:11px;">Just now</span></div>
+                    </div>
+                    <button class="submit-btn green" style="margin-top:4px;" onclick="updateGPS()">📡 Force GPS
+                        Sync</button>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── ADMIN: DASHBOARD ─── -->
+            <div class="tab-pane" id="pane-admin-dash">
+                <div class="page-pad">
+                    <p style="font-size:12px;color:var(--text3);font-family:var(--mono);">Admin Portal</p>
+                    <h2 style="font-size:20px;font-weight:700;margin-top:2px;margin-bottom:14px;">Transport <span
+                            style="color:var(--purple);">Control Panel</span></h2>
+                    <div class="admin-grid">
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--cyan);">12</div>
+                            <div class="lbl">Total Buses</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--green);">9</div>
+                            <div class="lbl">Active</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--amber);">2</div>
+                            <div class="lbl">Delayed</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--cyan);">847</div>
+                            <div class="lbl">Students</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--green);">12</div>
+                            <div class="lbl">Drivers</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--red);">7</div>
+                            <div class="lbl">Complaints</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div class="section-title" style="margin-bottom:0;">🚌 All Buses — Live</div>
+                            <button class="action-btn" onclick="showToast('↻ Data refreshed','cyan')">↻ Refresh</button>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <tr>
+                                    <th>Bus</th>
+                                    <th>Route</th>
+                                    <th>Driver</th>
+                                    <th>Speed</th>
+                                    <th>Status</th>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:var(--mono);color:var(--cyan);">23</td>
+                                    <td>ECR</td>
+                                    <td>Rajan K.</td>
+                                    <td>42 km/h</td>
+                                    <td><span class="table-badge active">On Time</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:var(--mono);color:var(--cyan);">14</td>
+                                    <td>OMR</td>
+                                    <td>Suresh M.</td>
+                                    <td>38 km/h</td>
+                                    <td><span class="table-badge active">On Time</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:var(--mono);color:var(--cyan);">07</td>
+                                    <td>Velachery</td>
+                                    <td>Kumar P.</td>
+                                    <td>0 km/h</td>
+                                    <td><span class="table-badge delayed">Delayed +15m</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:var(--mono);color:var(--cyan);">31</td>
+                                    <td>Tambaram</td>
+                                    <td>Mani S.</td>
+                                    <td>55 km/h</td>
+                                    <td><span class="table-badge active">On Time</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family:var(--mono);color:var(--cyan);">05</td>
+                                    <td>Sholinganallur</td>
+                                    <td>Raj V.</td>
+                                    <td>0 km/h</td>
+                                    <td><span class="table-badge offline">Off Duty</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div class="section-title" style="margin-bottom:0;">📋 Recent Complaints</div>
+                            <span class="ai-chip">7 Open</span>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Category</th>
+                                    <th>Bus</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                                <tr>
+                                    <td>Priya R.</td>
+                                    <td>Bus Delay</td>
+                                    <td>07</td>
+                                    <td><span class="table-badge open">Open</span></td>
+                                    <td><button class="action-btn"
+                                            onclick="showToast('✅ Complaint resolved','green')">Resolve</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Arjun S.</td>
+                                    <td>Overcrowding</td>
+                                    <td>23</td>
+                                    <td><span class="table-badge open">Open</span></td>
+                                    <td><button class="action-btn"
+                                            onclick="showToast('✅ Complaint resolved','green')">Resolve</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Kavya M.</td>
+                                    <td>Route Issue</td>
+                                    <td>14</td>
+                                    <td><span class="table-badge resolved">Resolved</span></td>
+                                    <td><button class="action-btn">View</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">📢 Send Notification</div>
+                        <div class="form-group">
+                            <label>Alert Type</label>
+                            <select>
+                                <option>Bus Delayed</option>
+                                <option>Bus Arrived</option>
+                                <option>Route Changed</option>
+                                <option>Emergency Alert</option>
+                                <option>General Notice</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Target Route</label>
+                            <select>
+                                <option>All Routes</option>
+                                <option>Route ECR</option>
+                                <option>Route OMR</option>
+                                <option>Route Velachery</option>
+                                <option>Route Tambaram</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea placeholder="Enter notification message..."></textarea>
+                        </div>
+                        <button class="submit-btn purple"
+                            onclick="showToast('📢 Notification sent to all students','amber')">📢 Send to All
+                            →</button>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── ADMIN: GATE / CCTV ─── -->
+            <div class="tab-pane" id="pane-admin-gate">
+                <div class="page-pad">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                        <h2 style="font-size:18px;font-weight:700;">Smart Gate</h2>
+                        <span class="ai-chip">AI OCR</span>
+                    </div>
+                    <div class="ai-card"
+                        style="background:linear-gradient(135deg,rgba(0,40,60,0.8),rgba(0,20,40,0.8));border-color:rgba(0,229,255,0.2);">
+                        <div class="ai-card-header">
+                            <span style="font-size:13px;font-weight:600;">CCTV Gate Detection</span>
+                            <span class="status-pill on-time">● System Active</span>
+                        </div>
+                        <div
+                            style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-bottom:12px;border:1px solid var(--border);">
+                            <div style="font-size:28px;margin-bottom:6px;">📷</div>
+                            <p style="font-size:12px;color:var(--text2);">Live CCTV feed (OpenCV + EasyOCR)</p>
+                            <p style="font-size:11px;color:var(--text3);margin-top:4px;">Auto-detects number plate on
+                                entry/exit</p>
+                        </div>
+                        <button class="submit-btn" style="padding:10px;" onclick="simulateGateDetect()">🔍 Simulate Gate
+                            Detection</button>
+                    </div>
+                    <div class="section-title">🚧 Gate Entry/Exit Log</div>
+                    <div class="card" id="gate-log-card">
+                        <div class="gate-entry">
+                            <div class="gate-plate">TN09 AB23</div>
+                            <div class="gate-info">
+                                <p>Bus 23 · ECR Route</p>
+                                <span>Entry: 06:28 AM · Exit: 08:35 AM</span>
+                            </div>
+                            <span class="table-badge resolved">Inside</span>
+                        </div>
+                        <div class="gate-entry">
+                            <div class="gate-plate">TN09 CD14</div>
+                            <div class="gate-info">
+                                <p>Bus 14 · OMR Route</p>
+                                <span>Entry: 06:35 AM · Exit: 08:40 AM</span>
+                            </div>
+                            <span class="table-badge resolved">Exited</span>
+                        </div>
+                        <div class="gate-entry">
+                            <div class="gate-plate">TN09 EF07</div>
+                            <div class="gate-info">
+                                <p>Bus 07 · Velachery Route</p>
+                                <span>Entry: 06:50 AM · Exit: —</span>
+                            </div>
+                            <span class="table-badge delayed">Inside</span>
+                        </div>
+                        <div class="gate-entry">
+                            <div class="gate-plate">TN09 GH31</div>
+                            <div class="gate-info">
+                                <p>Bus 31 · Tambaram Route</p>
+                                <span>Entry: 07:02 AM · Exit: 08:50 AM</span>
+                            </div>
+                            <span class="table-badge resolved">Exited</span>
+                        </div>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+
+            <!-- ─── ADMIN: REPORTS ─── -->
+            <div class="tab-pane" id="pane-admin-reports">
+                <div class="page-pad">
+                    <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">📊 Analytics & Reports</h2>
+                    <div class="admin-grid">
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--green);">156</div>
+                            <div class="lbl">Total Trips</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--cyan);">94%</div>
+                            <div class="lbl">On-Time Rate</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--amber);">7</div>
+                            <div class="lbl">Avg Delay (min)</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--green);">847</div>
+                            <div class="lbl">Passengers/Day</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--purple);">98%</div>
+                            <div class="lbl">Pass Renewal</div>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="num" style="color:var(--red);">7</div>
+                            <div class="lbl">Open Issues</div>
+                        </div>
+                    </div>
+                    <!-- Mini bar chart -->
+                    <div class="card">
+                        <div class="section-title">📈 Trips This Week</div>
+                        <div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 0;">
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,229,255,0.5);"
+                                    data-h="65"></div>
+                                <span style="font-size:9px;color:var(--text3);">Mon</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,229,255,0.5);"
+                                    data-h="58"></div>
+                                <span style="font-size:9px;color:var(--text3);">Tue</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,229,255,0.5);"
+                                    data-h="72"></div>
+                                <span style="font-size:9px;color:var(--text3);">Wed</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,229,255,0.6);"
+                                    data-h="80"></div>
+                                <span style="font-size:9px;color:var(--text3);">Thu</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,229,255,0.5);"
+                                    data-h="68"></div>
+                                <span style="font-size:9px;color:var(--text3);">Fri</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,100,180,0.4);"
+                                    data-h="30"></div>
+                                <span style="font-size:9px;color:var(--text3);">Sat</span>
+                            </div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="width:100%;border-radius:4px 4px 0 0;background:rgba(0,100,180,0.25);"
+                                    data-h="12"></div>
+                                <span style="font-size:9px;color:var(--text3);">Sun</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title">📄 Generate Report</div>
+                        <div class="form-group">
+                            <label>Report Type</label>
+                            <select>
+                                <option>Daily Report</option>
+                                <option>Weekly Report</option>
+                                <option>Monthly Report</option>
+                                <option>Complaints Report</option>
+                                <option>Driver Performance</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date Range</label>
+                            <input type="date" value="2025-05-01">
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            <button class="submit-btn" style="background:linear-gradient(135deg,#c62828,#880e4f);"
+                                onclick="showToast('📄 PDF report generated','amber')">📄 Export PDF</button>
+                            <button class="submit-btn" style="background:linear-gradient(135deg,#1b5e20,#004d40);"
+                                onclick="showToast('📊 Excel exported','green')">📊 Export Excel</button>
+                        </div>
+                    </div>
+                    <div style="height:20px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav" id="bottom-nav"></nav>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
