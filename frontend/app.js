@@ -301,49 +301,82 @@ async function loadLiveBusFromBackend(focusMap = false) {
         const lng = Number(bus.longitude);
         const speed = Number(bus.speed || 0);
         const passengers = Number(bus.passengerCount || 0);
+        const route = bus.route || 'ECR';
+        const busNumber = bus.busNumber || 23;
+        const driverName = bus.driverName || 'Rajan Kumar';
+        const status = bus.status || 'on-time';
 
-        if (!lat || !lng || !busMarker || !trackMap) return;
+        if (!lat || !lng) return;
 
         const livePos = [lat, lng];
 
-        busMarker.setLatLng(livePos);
-        busMarker.setPopupContent(`
-      <b>Bus ${bus.busNumber}</b><br>
-      Route ${bus.route || 'ECR'}<br>
-      Speed: ${speed} km/h<br>
-      Status: ${bus.status || 'on-time'}
-    `);
+        // Update map marker
+        if (busMarker && trackMap) {
+            busMarker.setLatLng(livePos);
+            busMarker.setPopupContent(`
+                <b>Bus ${busNumber}</b><br>
+                Route: ${route}<br>
+                Driver: ${driverName}<br>
+                Speed: ${speed} km/h<br>
+                Status: ${status}
+            `);
 
-        if (focusMap) {
-            trackMap.setView(livePos, 15);
-            busMarker.openPopup();
+            if (focusMap) {
+                trackMap.setView(livePos, 15);
+                busMarker.openPopup();
+            }
         }
 
-        document.getElementById('meta-speed').innerHTML =
-            `${speed}<span style="font-size:11px;color:var(--text2)"> km/h</span>`;
+        // Update Bus number
+        const heroBusNum = document.getElementById('hero-bus-num');
+        if (heroBusNum) heroBusNum.textContent = busNumber;
 
+        // Update route title and subtitle
+        const routeTitle = document.querySelector('.bus-route-info h3');
+        if (routeTitle) routeTitle.textContent = `Route ${route}`;
+
+        const routeSub = document.querySelector('.bus-route-info p');
+        if (routeSub) routeSub.textContent = `Live GPS tracking active`;
+
+        // Update speed
+        const metaSpeed = document.getElementById('meta-speed');
+        if (metaSpeed) {
+            metaSpeed.innerHTML = `${speed}<span style="font-size:11px;color:var(--text2)"> km/h</span>`;
+        }
+
+        // Update passengers
         const passengerBox = document.querySelector('.stats-row .stat-card:nth-child(2) .stat-val');
         if (passengerBox) passengerBox.textContent = passengers;
 
+        // Update status pill
         const heroStatus = document.getElementById('hero-status');
         if (heroStatus) {
-            heroStatus.textContent = bus.status === 'delayed' ? '● Delayed' : '● On Time';
-            heroStatus.className = bus.status === 'delayed'
-                ? 'status-pill delayed'
-                : 'status-pill on-time';
+            if (status === 'delayed') {
+                heroStatus.textContent = 'Delayed';
+                heroStatus.className = 'status-pill delayed';
+            } else if (status === 'arrived') {
+                heroStatus.textContent = 'Arrived';
+                heroStatus.className = 'status-pill arrived';
+            } else {
+                heroStatus.textContent = 'On Time';
+                heroStatus.className = 'status-pill on-time';
+            }
         }
 
-        console.log('✅ Student map updated from backend:', livePos);
+        // Update console for testing
+        console.log('Student dashboard updated from backend:', {
+            busNumber,
+            route,
+            driverName,
+            speed,
+            passengers,
+            status,
+            location: livePos
+        });
 
     } catch (err) {
-        console.log('❌ Live bus fetch error:', err);
+        console.log('Live bus fetch error:', err);
     }
-}
-
-function simulateBusMove() {
-    // Fake movement disabled.
-    // Student map now uses real backend GPS from /api/bus/23.
-    loadLiveBusFromBackend(false);
 }
 
 // ═══════════════════════════════════════════════════════
