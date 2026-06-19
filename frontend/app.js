@@ -189,6 +189,9 @@ function switchTab(tabId) {
     showPane(item.pane);
     activeTab = tabId;
 
+    if (tabId === 'home') {
+        loadLiveBusFromBackend(false);
+    }
     if (tabId === 'track') {
         setTimeout(() => {
             if (!trackMap) {
@@ -526,3 +529,13 @@ window.addEventListener('load', () => {
         openApp({ role, name, email, busNumber });
     }
 });
+// Auto load real backend bus data after app starts
+setTimeout(() => {
+    if (typeof loadLiveBusFromBackend === 'function') {
+        loadLiveBusFromBackend(false);
+    }
+
+    if (typeof startLiveBusPolling === 'function') {
+        startLiveBusPolling();
+    }
+}, 1000);
