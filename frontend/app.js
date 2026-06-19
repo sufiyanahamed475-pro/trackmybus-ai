@@ -365,7 +365,26 @@ async function loadLiveBusFromBackend(focusMap = false) {
                 heroStatus.className = 'status-pill on-time';
             }
         }
+        // Update status badge from backend
+        const backendStatus = (bus.status || 'on-time').toString().toLowerCase();
+        const displayStatus =
+            backendStatus === 'on-trip' ? 'Trip Active' :
+            backendStatus === 'completed' ? 'Trip Ended' :
+            backendStatus === 'delayed' ? 'Delayed' :
+            'On Time';
 
+        document.querySelectorAll('.status-pill').forEach((badge) => {
+            const currentText = badge.textContent.trim().toLowerCase();
+
+            if (['on time', 'trip active', 'trip ended', 'delayed', 'on-trip', 'completed'].includes(currentText)) {
+                badge.textContent = displayStatus;
+                badge.className =
+                    displayStatus === 'Trip Active' ? 'status-pill on-time' :
+                    displayStatus === 'Trip Ended' ? 'status-pill delayed' :
+                    displayStatus === 'Delayed' ? 'status-pill delayed' :
+                    'status-pill on-time';
+            }
+        });
         // Update console for testing
         console.log('Student dashboard updated from backend:', {
             busNumber,
@@ -587,3 +606,4 @@ setTimeout(() => {
         startLiveBusPolling();
     }
 }, 1000);
+
