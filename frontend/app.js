@@ -385,21 +385,69 @@ async function loadLiveBusFromBackend(focusMap = false) {
 // ═══════════════════════════════════════════════════════
 //  DRIVER ACTIONS
 // ═══════════════════════════════════════════════════════
-function startTrip() {
+async function startTrip() {
     tripActive = true;
+
     document.getElementById('btn-start-trip').classList.add('active-start');
-    document.getElementById('driver-status').textContent = '● On Route';
+    document.getElementById('driver-status').textContent = 'Trip Active';
     document.getElementById('driver-status').className = 'status-pill on-time';
-    showToast('▶ Trip started — GPS broadcasting', 'green');
+
+    try {
+        const res = await fetch(`${API}/api/bus/23/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                status: 'on-trip',
+                passengerCount: 0,
+                delayReason: ''
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || 'Backend update failed');
+        }
+
+        console.log('Driver start trip updated backend', data.bus);
+        showToast('Trip started - backend updated', 'green');
+    } catch (err) {
+        console.error('Start trip backend error:', err);
+        showToast('Trip started locally, backend update failed', 'amber');
+    }
 }
 
-function endTrip() {
+async function endTrip() {
     tripActive = false;
+
     document.getElementById('btn-start-trip').classList.remove('active-start');
-    document.getElementById('driver-status').textContent = '● Trip Ended';
+    document.getElementById('driver-status').textContent = 'Trip Ended';
     document.getElementById('driver-status').className = 'status-pill delayed';
     document.getElementById('d-trips').textContent = '3';
-    showToast('■ Trip ended — Summary saved', 'amber');
+
+    try {
+        const res = await fetch(`${API}/api/bus/23/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                status: 'completed',
+                passengerCount: 0,
+                delayReason: ''
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || 'Backend update failed');
+        }
+
+        console.log('Driver end trip updated backend', data.bus);
+        showToast('Trip ended - backend updated', 'amber');
+    } catch (err) {
+        console.error('End trip backend error:', err);
+        showToast('Trip ended locally, backend update failed', 'amber');
+    }
 }
 
 function updateGPS() {
