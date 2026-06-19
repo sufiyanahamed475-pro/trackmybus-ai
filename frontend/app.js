@@ -13,7 +13,7 @@ let liveBusPoll = null;
 // ═══════════════════════════════════════════════════════
 //  AUTH  (Backend connected for Student + Driver)
 // ═══════════════════════════════════════════════════════
-const API = 'http://localhost:5000';
+const API = 'https://name-trackmybus-ai-backend.onrender.com';
 
 const DEMO_ADMIN = {
     email: 'admin@amet.ac.in',
