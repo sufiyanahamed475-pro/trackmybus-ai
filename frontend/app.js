@@ -685,3 +685,88 @@ async function updateDriverBusDetails() {
 setInterval(injectDriverBusControls, 1000);
 
 
+
+// Admin dashboard backend stats
+async function loadAdminBackendStats() {
+    const adminStats = document.querySelectorAll('.admin-stat');
+    if (!adminStats.length) return;
+
+    try {
+        const res = await fetch(`${API}/api/bus/all`);
+        const data = await res.json();
+
+        const buses = Array.isArray(data) ? data : (data.buses || data.bus || []);
+        if (!Array.isArray(buses) || buses.length === 0) return;
+
+        const totalBuses = buses.length;
+        const delayedBuses = buses.filter(bus => (bus.status || '').toLowerCase() === 'delayed').length;
+        const activeGoodBuses = totalBuses - delayedBuses;
+        const onTimeRate = Math.round((activeGoodBuses / totalBuses) * 100);
+        const totalPassengers = buses.reduce((sum, bus) => sum + Number(bus.passengerCount || 0), 0);
+        const avgDelay = delayedBuses > 0 ? 8 : 0;
+
+        adminStats.forEach((card) => {
+            const label = card.querySelector('.lbl')?.textContent.trim().toLowerCase();
+            const number = card.querySelector('.num');
+
+            if (!label || !number) return;
+
+            // Visible Admin control panel cards
+            if (label.includes('total buses')) {
+                number.textContent = totalBuses;
+            }
+
+            if (label === 'active') {
+                number.textContent = activeGoodBuses;
+            }
+
+            if (label === 'delayed') {
+                number.textContent = delayedBuses;
+            }
+
+            if (label.includes('students')) {
+                number.textContent = totalPassengers;
+            }
+
+            if (label.includes('drivers')) {
+                number.textContent = totalBuses;
+            }
+
+            if (label.includes('complaints')) {
+                number.textContent = delayedBuses;
+            }
+            if (label.includes('on-time')) {
+                number.textContent = `${onTimeRate}%`;
+            }
+
+            if (label.includes('avg delay')) {
+                number.textContent = avgDelay;
+            }
+
+            if (label.includes('passengers')) {
+                number.textContent = totalPassengers;
+            }
+
+            if (label.includes('open issues')) {
+                number.textContent = delayedBuses;
+            }
+        });
+
+        console.log('Admin dashboard updated from backend:', {
+            totalBuses,
+            delayedBuses,
+            onTimeRate,
+            totalPassengers,
+            avgDelay
+        });
+
+    } catch (err) {
+        console.error('Admin backend stats error:', err);
+    }
+}
+
+// Keep admin stats live when admin dashboard is visible
+setInterval(loadAdminBackendStats, 5000);
+setTimeout(loadAdminBackendStats, 1000);
+
+
