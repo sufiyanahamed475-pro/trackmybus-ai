@@ -607,3 +607,81 @@ setTimeout(() => {
     }
 }, 1000);
 
+
+// Driver extra controls: Passenger Count + Delay Reason
+function injectDriverBusControls() {
+    if (document.getElementById('driver-backend-controls')) return;
+
+    const startBtn = document.getElementById('btn-start-trip');
+    if (!startBtn) return;
+
+    const controlCard = document.createElement('div');
+    controlCard.id = 'driver-backend-controls';
+    controlCard.style.cssText = `
+        margin: 14px 0;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(0,229,255,0.35);
+        background: rgba(7, 20, 45, 0.86);
+        box-shadow: 0 0 24px rgba(0,229,255,0.12);
+    `;
+
+    controlCard.innerHTML = `
+        <h3 style="margin:0 0 12px;color:#00e5ff;">?? Live Bus Control</h3>
+
+        <label style="font-size:12px;color:#9befff;">Passenger Count</label>
+        <input id="driver-passenger-count" type="number" min="0" value="0"
+            style="width:100%;margin:6px 0 12px;padding:12px;border-radius:12px;border:1px solid rgba(0,229,255,0.35);background:#07142d;color:white;outline:none;">
+
+        <label style="font-size:12px;color:#9befff;">Delay Reason</label>
+        <input id="driver-delay-reason" type="text" placeholder="Example: Traffic near Adyar"
+            style="width:100%;margin:6px 0 12px;padding:12px;border-radius:12px;border:1px solid rgba(0,229,255,0.35);background:#07142d;color:white;outline:none;">
+
+        <button onclick="updateDriverBusDetails()"
+            style="width:100%;padding:13px;border:0;border-radius:14px;background:linear-gradient(90deg,#00e5ff,#9d00ff);color:white;font-weight:800;cursor:pointer;">
+            Update Bus Details
+        </button>
+    `;
+
+    const target = startBtn.closest('.card, .glass-card, section, div') || startBtn.parentElement;
+    target.insertAdjacentElement('afterend', controlCard);
+}
+
+async function updateDriverBusDetails() {
+    const passengerInput = document.getElementById('driver-passenger-count');
+    const delayInput = document.getElementById('driver-delay-reason');
+
+    const passengerCount = Number(passengerInput?.value || 0);
+    const delayReason = (delayInput?.value || '').trim();
+
+    const status = delayReason ? 'delayed' : (tripActive ? 'on-trip' : 'on-time');
+
+    try {
+        const res = await fetch(`${API}/api/bus/23/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                status,
+                passengerCount,
+                delayReason
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || 'Backend update failed');
+        }
+
+        console.log('Driver passenger/delay updated backend', data.bus);
+        showToast('Bus details updated to backend', 'green');
+    } catch (err) {
+        console.error('Driver bus details update error:', err);
+        showToast('Bus details update failed', 'amber');
+    }
+}
+
+// Keep checking because driver dashboard may render after login
+setInterval(injectDriverBusControls, 1000);
+
+
