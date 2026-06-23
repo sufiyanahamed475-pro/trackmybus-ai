@@ -67,7 +67,7 @@ router.patch('/:number/status', async (req, res) => {
 
         const bus = await Bus.findOneAndUpdate(
             { busNumber: req.params.number },
-            { status, delayReason, passengerCount },
+            { status, delayReason, passengerCount, lastUpdated: new Date() },
             { new: true }
         );
 
@@ -95,3 +95,4 @@ router.post('/add', async (req, res) => {
 });
 
 module.exports = router;
+
